@@ -3,7 +3,7 @@ using UnityEngine;
 public class GameController : MonoBehaviour
 {
     [SerializeField] private GridManager gridManager;
-    [SerializeField] private float dropTime = 0.5f;
+    
 
     private GameManager gm;
 
@@ -23,7 +23,7 @@ public class GameController : MonoBehaviour
         HandleInput();
 
         dropTimer += Time.deltaTime;
-        if (dropTimer >= dropTime)
+        if (dropTimer >= gm.GetDropTime())
         {
             dropTimer = 0f;
             gm.MoveTetrominoDown();

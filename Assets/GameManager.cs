@@ -12,35 +12,36 @@ public class GameManager : MonoBehaviour
     public static readonly int GRID_HEIGHT = 20;
     public static readonly int GRID_WIDTH = 10;
     private double tick = 500;
-    public bool Playing { get; private set; } = true;
     private int score;
     private int[,] grid;
     private Tetromino tetromino;
+    public bool Playing { get; private set; } = true;
     public bool FallDown { get; set; }
+
+    [SerializeField] private float dropTime = 0.5f;
 
     public TMP_Text scoreText;
 
     public static GameManager Instance { get; private set; }
 
+    private static readonly float ACCELARATION = 0.99f;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
         {
-            Destroy(gameObject); // Optional, if you want only one GameManager
+            Destroy(gameObject);
             return;
         }
 
         Instance = this;
-        DontDestroyOnLoad(gameObject); // Optional, if it should persist between scenes
+        DontDestroyOnLoad(gameObject);
     }
-
     public GridManager GridManager { get; private set; }
-
     public void SetGridManager(GridManager gridManager)
     {
         GridManager = gridManager;
     }
-
 
     private GameManager()
     {
@@ -76,7 +77,6 @@ public class GameManager : MonoBehaviour
         if (Playing)
         {
             scoreText.text = "SCORE: " + score;
-            Debug.Log("did it bruh\n");
             return;
         }
         scoreText.text = "FINAL SCORE: " + score;
@@ -146,7 +146,13 @@ public class GameManager : MonoBehaviour
         HandleFinishedRows();
         tetromino = TetrominoSpawner.GenerateTetromino();
         tick *= 0.99;
+        dropTime *= ACCELARATION;
         FallDown = false;
+    }
+
+    public float GetDropTime()
+    {
+        return dropTime;
     }
 
     public void MoveTetrominoDown()
