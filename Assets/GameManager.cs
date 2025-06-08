@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using Microsoft.VisualBasic;
 using UnityEngine;
 using TMPro;
+using Unity.VisualScripting;
+using UnityEditor.Rendering.Universal;
+using System.IO;
 
 public class GameManager : MonoBehaviour
 {
@@ -13,14 +16,17 @@ public class GameManager : MonoBehaviour
     public static readonly int GRID_WIDTH = 10;
     private double tick = 500;
     private int score;
+    private int highScore;
+    private string highScoreFilePath;
     private int[,] grid;
     private Tetromino tetromino;
-    public bool Playing { get; private set; } = true;
     public bool FallDown { get; set; }
 
     [SerializeField] private float dropTime = 0.5f;
 
     public TMP_Text scoreText;
+
+    public TMP_Text highScoreText;
 
     public static GameManager Instance { get; private set; }
 
@@ -35,6 +41,7 @@ public class GameManager : MonoBehaviour
         }
 
         Instance = this;
+        highScoreFilePath = Path.Combine(Application.persistentDataPath, "highscore.txt");
         DontDestroyOnLoad(gameObject);
     }
     public GridManager GridManager { get; private set; }
@@ -46,13 +53,14 @@ public class GameManager : MonoBehaviour
     private GameManager()
     {
         grid = new int[GRID_HEIGHT, GRID_WIDTH];
-        score = 0;
-        tetromino = TetrominoSpawner.GenerateTetromino();
-        FallDown = false;
     }
 
     public void PrintSituation()
     {
+        if (SceneManager.Instance.GameState != GameState.Playing)
+        {
+            return;
+        }
         Tile[,] tiles = GridManager.GetTiles();
         for (int i = 0; i < GRID_HEIGHT; i++)
         {
@@ -74,12 +82,14 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
-        if (Playing)
+        highScoreText.text = "HIGH SCORE: " + highScore;
+        if (SceneManager.Instance.GameState != GameState.Restart)
         {
             scoreText.text = "SCORE: " + score;
             return;
         }
         scoreText.text = "FINAL SCORE: " + score;
+        
     }
 
     public bool TileClashes((int, int) position)
@@ -136,8 +146,11 @@ public class GameManager : MonoBehaviour
             if (position.Item1 + tetromino.GetCenterPosition().Item1 < 0) //we are above screen
             {
                 FallDown = false;
-                Playing = false;
-                PrintSituation();
+                SceneManager.Instance.GameState = GameState.Restart;
+                if (highScore < score)
+                {
+                    highScore = score;
+                }
                 return;
             }
             grid[position.Item1 + tetromino.GetCenterPosition().Item1, position.Item2 + tetromino.GetCenterPosition().Item2]
@@ -145,6 +158,12 @@ public class GameManager : MonoBehaviour
         }
         HandleFinishedRows();
         tetromino = TetrominoSpawner.GenerateTetromino();
+        if (!CheckSpawnIsOK())
+        {
+            SceneManager.Instance.GameState = GameState.Restart;
+            return;
+        }
+
         tick *= 0.99;
         dropTime *= ACCELARATION;
         FallDown = false;
@@ -176,5 +195,43 @@ public class GameManager : MonoBehaviour
     public void RotateTetromino()
     {
         tetromino.Rotate();
+    }
+
+    public void StartNew()
+    {
+        grid = new int[GRID_HEIGHT, GRID_WIDTH];
+        score = 0;
+        tetromino = TetrominoSpawner.GenerateTetromino();
+        FallDown = false;
+    }
+
+    private bool CheckSpawnIsOK()
+    {
+        foreach (var (y, x) in tetromino.GetPositions())
+        {
+            (int, int) center = tetromino.GetCenterPosition();
+            if (TileClashes((y + center.Item1, x + center.Item2)))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void LoadHighScore()
+    {
+        if (!File.Exists(highScoreFilePath))
+        {
+            File.WriteAllText(highScoreFilePath, "0");
+            return;
+        }
+
+        string content = File.ReadAllText(highScoreFilePath);
+        int.TryParse(content, out highScore);
+    }
+
+    public void StoreHighScore()
+    {
+        File.WriteAllText(highScoreFilePath, highScore.ToString());
     }
 }

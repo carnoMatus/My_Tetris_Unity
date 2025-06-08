@@ -22,7 +22,7 @@ public class GridManager : MonoBehaviour
                 tileGrid[y, x] = Instantiate(tilePrefab, new Vector3(x, y), Quaternion.identity);
                 tileGrid[y, x].name = $"Tile {x},{y}";
 
-                bool offset = (x + y) % 2 == 0;
+                bool offset = (x + y) % 2 != 0;
                 tileGrid[y, x].Render(offset);
             }
         }
