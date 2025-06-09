@@ -1,37 +1,28 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.VisualBasic;
 using UnityEngine;
 using TMPro;
-using Unity.VisualScripting;
-using UnityEditor.Rendering.Universal;
 using System.IO;
 
 public class GameManager : MonoBehaviour
 {
-    public static readonly int GRID_HEIGHT = 20;
-    public static readonly int GRID_WIDTH = 10;
-    private double tick = 500;
+    public static GameManager Instance { get; private set; }
+    public static readonly int GridHeight = 20;
+    public static readonly int GridWidth = 10;
+    private static readonly float Acceleration = 0.007f;
     private int score;
     private int highScore;
+    private int level;
+    private int totalRowsCleared;
     private string highScoreFilePath;
-    [SerializeField] private AudioSource clearRowAudio;
     private int[,] grid;
     private Tetromino tetromino;
+    [SerializeField] private AudioSource clearRowAudio;
+
     public bool FallDown { get; set; }
-
+    public GridManager GridManager { get; set; }
     [SerializeField] private float dropTime = 0.5f;
-
-    public TMP_Text scoreText;
-
-    public TMP_Text highScoreText;
-
-    public static GameManager Instance { get; private set; }
-
-    private static readonly float ACCELARATION = 0.99f;
+    [SerializeField] private TMP_Text scoreText;
+    [SerializeField] private TMP_Text highScoreText;
+    [SerializeField] private GameController gameController;
 
     private void Awake()
     {
@@ -45,15 +36,10 @@ public class GameManager : MonoBehaviour
         highScoreFilePath = Path.Combine(Application.persistentDataPath, "highscore.txt");
         DontDestroyOnLoad(gameObject);
     }
-    public GridManager GridManager { get; private set; }
-    public void SetGridManager(GridManager gridManager)
-    {
-        GridManager = gridManager;
-    }
 
     private GameManager()
     {
-        grid = new int[GRID_HEIGHT, GRID_WIDTH];
+        grid = new int[GridHeight, GridWidth];
     }
 
     public void PrintSituation()
@@ -63,12 +49,12 @@ public class GameManager : MonoBehaviour
             return;
         }
         Tile[,] tiles = GridManager.GetTiles();
-        for (int i = 0; i < GRID_HEIGHT; i++)
+        for (int i = 0; i < GridHeight; i++)
         {
-            for (int j = 0; j < GRID_WIDTH; j++)
+            for (int j = 0; j < GridWidth; j++)
             {
                 (int, int) relative = (i - tetromino.GetCenterPosition().Item1, j - tetromino.GetCenterPosition().Item2);
-                Tile currentTile = tiles[GRID_HEIGHT - 1 - i, j];
+                Tile currentTile = tiles[GridHeight - 1 - i, j];
                 if (tetromino.GetPositions().Contains(relative))
                 {
                     currentTile.Render(tetromino.GetColor(), (i + j) % 2 == 0);
@@ -79,7 +65,8 @@ public class GameManager : MonoBehaviour
                 }
                 else
                 {
-                    currentTile.Render(Tetromino.GetColorByIndex(grid[i, j] - 1), (i + j) % 2 == 0); // again 0 cant be there
+                    currentTile.Render(Tetromino.GetColorByIndex(grid[i, j] - 1), (i + j) % 2 == 0);
+                    // again 0 cant be there
                 }
             }
         }
@@ -90,28 +77,28 @@ public class GameManager : MonoBehaviour
             return;
         }
         scoreText.text = "FINAL SCORE: " + score;
-        
+
     }
 
     public bool TileClashes((int, int) position)
     {
         if (position.Item1 < 0)
         {
-            return false; //still above the screen
+            return false; // still above the screen
         }
-        return (position.Item1 >= GRID_HEIGHT ||
-            position.Item2 >= GRID_WIDTH ||
+        return position.Item1 >= GridHeight ||
+            position.Item2 >= GridWidth ||
             position.Item2 < 0 ||
-            grid[position.Item1, position.Item2] != 0);
+            grid[position.Item1, position.Item2] != 0;
     }
 
     private void HandleFinishedRows()
     {
-        int scoreToAdd = 0;
-        for (int i = 0; i < GRID_HEIGHT; i++)
+        int rowsCleared = 0;
+        for (int i = 0; i < GridHeight; i++)
         {
             bool full = true;
-            for (int j = 0; j < GRID_WIDTH; j++)
+            for (int j = 0; j < GridWidth; j++)
             {
                 if (grid[i, j] <= 0)
                 {
@@ -122,55 +109,48 @@ public class GameManager : MonoBehaviour
 
             if (full)
             {
-                scoreToAdd++;
+                rowsCleared++;
                 for (int row = i; row > 0; row--)
                 {
-                    for (int col = 0; col < GRID_WIDTH; col++)
+                    for (int col = 0; col < GridWidth; col++)
                     {
                         grid[row, col] = grid[row - 1, col];
                     }
                 }
-                for (int col = 0; col < GRID_WIDTH; col++)
+                for (int col = 0; col < GridWidth; col++)
                 {
                     grid[0, col] = 0;
                 }
                 i--;
             }
         }
-        score += (5000 * scoreToAdd) / (int)tick;
-        if (scoreToAdd > 0)
+        HandleScore(rowsCleared);
+        if (rowsCleared > 0)
         {
             clearRowAudio?.Play();
         }
+        dropTime = 0.8f - Acceleration * level;
     }
 
     private void CementTetromino()
     {
         foreach ((int, int) position in tetromino.GetPositions())
         {
-            if (position.Item1 + tetromino.GetCenterPosition().Item1 < 0) //we are above screen
+            if (position.Item1 + tetromino.GetCenterPosition().Item1 < 0) // we are above the screen
             {
-                FallDown = false;
-                SceneManager.Instance.GameState = GameState.Restart;
-                if (highScore < score)
-                {
-                    highScore = score;
-                }
+                HandleScoreAndStop();
                 return;
             }
             grid[position.Item1 + tetromino.GetCenterPosition().Item1, position.Item2 + tetromino.GetCenterPosition().Item2]
-                = tetromino.GetColorIndex() + 1; //1 cause 0 is an index but we dont want zeros
+                = tetromino.GetColorIndex() + 1; // 1 because 0 is an color index but we don't want zeros
         }
         HandleFinishedRows();
         tetromino = TetrominoSpawner.GenerateTetromino();
         if (!CheckSpawnIsOK())
         {
-            SceneManager.Instance.GameState = GameState.Restart;
+            HandleScoreAndStop();
             return;
         }
-
-        tick *= 0.99;
-        dropTime *= ACCELARATION;
         FallDown = false;
     }
 
@@ -204,8 +184,11 @@ public class GameManager : MonoBehaviour
 
     public void StartNew()
     {
-        grid = new int[GRID_HEIGHT, GRID_WIDTH];
+        grid = new int[GridHeight, GridWidth];
         score = 0;
+        level = 0;
+        totalRowsCleared = 0;
+
         tetromino = TetrominoSpawner.GenerateTetromino();
         FallDown = false;
     }
@@ -238,5 +221,43 @@ public class GameManager : MonoBehaviour
     {
         File.WriteAllText(highScoreFilePath, highScore.ToString());
         Debug.Log("Stored score " + highScore);
+    }
+
+    private void HandleScoreAndStop()
+    {
+        gameController.SetGameToNotPlaying("Press SPACE to restart...\n\nESC to quit", GameState.Restart);
+        FallDown = false;
+        SceneManager.Instance.GameState = GameState.Restart;
+        if (highScore < score)
+        {
+            highScore = score;
+        }
+        Debug.Log("restarting");
+    }
+
+    private void HandleScore(int rowsCleared)
+    {
+        int gain;
+        switch (rowsCleared)
+        {
+            case 0:
+                gain = 0;
+                break;
+            case 1:
+                gain = 40 * (level + 1);
+                break;
+            case 2:
+                gain = 100 * (level + 1);
+                break;
+            case 3:
+                gain = 300 * (level + 1);
+                break;
+            default:
+                gain = 1200 * (level + 1);
+                break;
+        }
+        score += gain;
+        totalRowsCleared += rowsCleared;
+        level = totalRowsCleared / 10;
     }
 }

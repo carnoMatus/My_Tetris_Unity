@@ -8,14 +8,10 @@ public class GameController : MonoBehaviour
     [SerializeField] private GridManager gridManager;
     [SerializeField] private AudioSource downKeyAudio;
     [SerializeField] private AudioSource soundtrack;
-
     [SerializeField] private AudioSource clickAudio;
     [SerializeField] private AudioLowPassFilter soundtrackLowPass;
-
-
     private GameManager gm;
     private SceneManager sm;
-
     private float dropTimer;
 
     void Start()
@@ -25,7 +21,7 @@ public class GameController : MonoBehaviour
         ApplyPauseAudioEffect(true);
         gm = GameManager.Instance;
         sm = SceneManager.Instance;
-        gm.SetGridManager(gridManager);
+        gm.GridManager = gridManager;
         gm.LoadHighScore();
     }
 
@@ -52,15 +48,11 @@ public class GameController : MonoBehaviour
 
     private void MenuUpdate()
     {
-        messageText.SetText("Press SPACE to start...\nESC to quit");
+        messageText.SetText("Press SPACE to start...\n\nESC to quit");
         messageText.gameObject.SetActive(true);
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            ApplyPauseAudioEffect(false);
-            sm.GameState = GameState.Playing;
-            gm.StartNew();
-            messageText.gameObject.SetActive(false);
-            clickAudio?.Play();
+            SetGameToPlaying(true);
         }
         if (Input.GetKeyDown(KeyCode.Escape))
         {
@@ -88,23 +80,25 @@ public class GameController : MonoBehaviour
             gm.MoveTetrominoDown();
         }
         if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
             gm.MoveTetrominoLeft();
+        }
         else if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
             gm.MoveTetrominoRight();
+        }
         else if (Input.GetKeyDown(KeyCode.DownArrow))
         {
             downKeyAudio?.Play();
             gm.FallDown = true;
         }
         else if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
             gm.RotateTetromino();
+        }
         else if (Input.GetKeyDown(KeyCode.Escape))
         {
-            ApplyPauseAudioEffect(true);
-            sm.GameState = GameState.Paused;
-            messageText.SetText("Press SPACE to resume...\nESC to quit");
-            messageText.gameObject.SetActive(true);
-            clickAudio?.Play();
+            SetGameToNotPlaying("Press SPACE to resume...\n\nR to restart\n\nESC to quit", GameState.Paused);
         }
     }
 
@@ -112,28 +106,23 @@ public class GameController : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            ApplyPauseAudioEffect(false);
-            sm.GameState = GameState.Playing;
-            messageText.gameObject.SetActive(false);
-            clickAudio?.Play();
+            SetGameToPlaying(false);
         }
-        if (Input.GetKeyDown(KeyCode.Escape))
+        else if (Input.GetKeyDown(KeyCode.Escape))
         {
             SafeExit();
+        }
+        else if (Input.GetKeyDown(KeyCode.R))
+        {
+            SetGameToPlaying(true);
         }
     }
 
     private void RestartUpdate()
     {
-        messageText.SetText("Press SPACE to restart...\nESC to quit");
-        messageText.gameObject.SetActive(true);
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            ApplyPauseAudioEffect(false);
-            sm.GameState = GameState.Playing;
-            messageText.gameObject.SetActive(false);
-            gm.StartNew();
-            clickAudio?.Play();
+            SetGameToPlaying(true);
         }
         if (Input.GetKeyDown(KeyCode.Escape))
         {
@@ -149,9 +138,28 @@ public class GameController : MonoBehaviour
 
     private void ApplyPauseAudioEffect(bool paused)
     {
-        
         soundtrackLowPass.enabled = paused;
-        soundtrackLowPass.cutoffFrequency = paused ? 400f : 22000f;
-        
+        soundtrackLowPass.cutoffFrequency = paused ? 1200f : 22000f;
+    }
+
+    private void SetGameToPlaying(bool restart)
+    {
+        ApplyPauseAudioEffect(false);
+        sm.GameState = GameState.Playing;
+        messageText.gameObject.SetActive(false);
+        clickAudio?.Play();
+        if (restart)
+        {
+            gm.StartNew();
+        }
+    }
+
+    public void SetGameToNotPlaying(String message, GameState state)
+    {
+        ApplyPauseAudioEffect(true);
+        sm.GameState = state;
+        messageText.SetText(message);
+        messageText.gameObject.SetActive(true);
+        clickAudio?.Play();
     }
 }

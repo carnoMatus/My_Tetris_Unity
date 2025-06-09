@@ -4,15 +4,14 @@ public class GridManager : MonoBehaviour
 {
     [SerializeField] private int width, height;
     [SerializeField] private Tile tilePrefab;
-    [SerializeField] private Transform camera;
-
+    [SerializeField] private new Transform camera;
     private Tile[,] tileGrid = new Tile[20, 10];
-
 
     void Start()
     {
         GenerateGrid();
     }
+    
     public void GenerateGrid()
     {
         for (int y = 0; y < height; y++)
