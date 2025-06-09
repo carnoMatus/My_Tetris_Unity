@@ -18,6 +18,7 @@ public class GameManager : MonoBehaviour
     private int score;
     private int highScore;
     private string highScoreFilePath;
+    [SerializeField] private AudioSource clearRowAudio;
     private int[,] grid;
     private Tetromino tetromino;
     public bool FallDown { get; set; }
@@ -137,6 +138,10 @@ public class GameManager : MonoBehaviour
             }
         }
         score += (5000 * scoreToAdd) / (int)tick;
+        if (scoreToAdd > 0)
+        {
+            clearRowAudio?.Play();
+        }
     }
 
     private void CementTetromino()
@@ -223,7 +228,6 @@ public class GameManager : MonoBehaviour
         if (!File.Exists(highScoreFilePath))
         {
             File.WriteAllText(highScoreFilePath, "0");
-            return;
         }
 
         string content = File.ReadAllText(highScoreFilePath);
@@ -233,5 +237,6 @@ public class GameManager : MonoBehaviour
     public void StoreHighScore()
     {
         File.WriteAllText(highScoreFilePath, highScore.ToString());
+        Debug.Log("Stored score " + highScore);
     }
 }

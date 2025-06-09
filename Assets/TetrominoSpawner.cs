@@ -17,7 +17,7 @@ public static class TetrominoSpawner
         templates.Add(new HashSet<(int, int)>() { (-1,0), (0,0), (1,0), (1,1)} ); // L-Shaped
         templates.Add(new HashSet<(int, int)>() { (-1,0), (0,0), (1,0), (1,-1) }); // Reverse-L
         templates.Add(new HashSet<(int, int)>() { (0,1), (0,0), (1,0), (1,-1) }); // ZigZag
-        templates.Add(new HashSet<(int, int)>() { (0,0), (0,1), (1,-1), (1,0) }); // Reverse-ZigZag
+        templates.Add(new HashSet<(int, int)>() { (0,0), (0,-1), (1,1), (1,0) }); // Reverse-ZigZag
     }
 
     public static Tetromino GenerateTetromino()
