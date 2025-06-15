@@ -88,7 +88,7 @@ public class Tetromino
 
         foreach (var (y, x) in relativePositions)
         {
-            newPositions.Add((-x, y));
+            newPositions.Add((x, -y));
             if (GameManager.Instance.TileClashes((-x + centerPosition.Item1, y + centerPosition.Item2)))
             {
                 return false;

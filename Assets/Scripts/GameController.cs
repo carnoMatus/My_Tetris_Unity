@@ -89,6 +89,10 @@ public class GameController : MonoBehaviour
         }
         else if (Input.GetKeyDown(KeyCode.DownArrow))
         {
+            gm.MoveTetrominoDown();
+        }
+        else if (Input.GetKeyDown(KeyCode.Space))
+        {
             downKeyAudio?.Play();
             gm.FallDown = true;
         }

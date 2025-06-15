@@ -15,8 +15,9 @@ public class GameManager : MonoBehaviour
     private string highScoreFilePath;
     private int[,] grid;
     private Tetromino tetromino;
-    [SerializeField] private AudioSource clearRowAudio;
+    private Tetromino tetrominoNext;
 
+    [SerializeField] private AudioSource clearRowAudio;
     public bool FallDown { get; set; }
     public GridManager GridManager { get; set; }
     [SerializeField] private float dropTime = 0.5f;
@@ -145,7 +146,9 @@ public class GameManager : MonoBehaviour
                 = tetromino.GetColorIndex() + 1; // 1 because 0 is an color index but we don't want zeros
         }
         HandleFinishedRows();
-        tetromino = TetrominoSpawner.GenerateTetromino();
+        tetromino = tetrominoNext;
+        tetrominoNext = TetrominoSpawner.GenerateTetromino();
+        Debug.Log("NEXT TETROMINO: " + string.Join(", ", tetrominoNext.GetPositions()));
         if (!CheckSpawnIsOK())
         {
             HandleScoreAndStop();
@@ -189,6 +192,7 @@ public class GameManager : MonoBehaviour
         level = 0;
         totalRowsCleared = 0;
 
+        tetrominoNext = TetrominoSpawner.GenerateTetromino();
         tetromino = TetrominoSpawner.GenerateTetromino();
         FallDown = false;
     }
