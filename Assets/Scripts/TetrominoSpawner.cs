@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
+
 
 public static class TetrominoSpawner
 {
     private static readonly List<HashSet<(int, int)>> templates = new List<HashSet<(int, int)>>();
-    private static Random random = new Random();
 
     static TetrominoSpawner()
     {
@@ -22,7 +23,7 @@ public static class TetrominoSpawner
 
     public static Tetromino GenerateTetromino(int gridWidth)
     {
-        int choice = random.Next(templates.Count);
-        return new Tetromino(templates[choice], 0, gridWidth / 2, choice);
+        int choice = UnityEngine.Random.Range(0, templates.Count);
+        return new Tetromino(GameManager.Instance, templates[choice], 0, gridWidth / 2, choice);
     }
 }

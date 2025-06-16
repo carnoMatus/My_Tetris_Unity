@@ -1,6 +1,10 @@
 using UnityEngine;
 using TMPro;
 using System.IO;
+using System;
+using System.Collections.Generic;
+using UnityEngine.UIElements;
+using Unity.VisualScripting;
 
 public class GameManager : MonoBehaviour
 {
@@ -84,7 +88,37 @@ public class GameManager : MonoBehaviour
             return;
         }
         scoreText.text = "FINAL SCORE: " + score;
+    }
 
+    public void RefreshTetromino(Action move)
+    {
+        HashSet<(int, int)> tetrominoBefore = tetromino.GetTotalPositions();
+        move?.Invoke();
+        HashSet<(int, int)> tetrominoAfter = tetromino.GetTotalPositions();
+        Tile[,] tiles = GridManager.GetTiles();
+        tetrominoBefore.ExceptWith(tetrominoAfter);
+
+        foreach (var position in tetrominoBefore)
+        {
+            if (position.Item1 < 0)
+            {
+                continue; // still above the screen
+            }
+            Tile currentTile = tiles[gridHeight - 1 - position.Item1, position.Item2];
+            if (grid[position.Item1, position.Item2] == 0)
+            {
+                currentTile.Render((position.Item1 + position.Item2) % 2 == 0);
+            }
+        }
+        foreach (var position in tetrominoAfter)
+        {
+            if (position.Item1 < 0)
+            {
+                continue; // still above the screen
+            }
+            Tile currentTile = tiles[gridHeight - 1 - position.Item1, position.Item2];
+            currentTile.Render(tetromino.GetColor(), (position.Item1 + position.Item2) % 2 == 0);
+        }
     }
 
     public bool TileClashes((int, int) position)
@@ -139,8 +173,9 @@ public class GameManager : MonoBehaviour
         dropTime = 0.8f - Acceleration * level;
     }
 
-    private void CementTetromino()
+    public void CementTetromino()
     {
+        PrintSituation();
         foreach ((int, int) position in tetromino.GetPositions())
         {
             if (position.Item1 + tetromino.GetCenterPosition().Item1 < 0) // we are above the screen
@@ -154,13 +189,13 @@ public class GameManager : MonoBehaviour
         HandleFinishedRows();
         tetromino = tetrominoNext;
         tetrominoNext = TetrominoSpawner.GenerateTetromino(gridWidth);
-        Debug.Log("NEXT TETROMINO: " + string.Join(", ", tetrominoNext.GetPositions()));
         if (!CheckSpawnIsOK())
         {
             HandleScoreAndStop();
             return;
         }
         FallDown = false;
+        PrintSituation();
     }
 
     public float GetDropTime()
@@ -170,25 +205,22 @@ public class GameManager : MonoBehaviour
 
     public void MoveTetrominoDown()
     {
-        if (!tetromino.MoveDown())
-        {
-            CementTetromino();
-        }
+        RefreshTetromino(tetromino.MoveDown);
     }
 
     public void MoveTetrominoRight()
     {
-        tetromino.MoveRight();
+        RefreshTetromino(tetromino.MoveRight);
     }
 
     public void MoveTetrominoLeft()
     {
-        tetromino.MoveLeft();
+        RefreshTetromino(tetromino.MoveLeft);
     }
 
     public void RotateTetromino()
     {
-        tetromino.Rotate();
+        RefreshTetromino(tetromino.Rotate);
     }
 
     public void StartNew()
@@ -201,14 +233,14 @@ public class GameManager : MonoBehaviour
         tetrominoNext = TetrominoSpawner.GenerateTetromino(gridWidth);
         tetromino = TetrominoSpawner.GenerateTetromino(gridWidth);
         FallDown = false;
+        PrintSituation();
     }
 
     private bool CheckSpawnIsOK()
     {
-        foreach (var (y, x) in tetromino.GetPositions())
+        foreach (var (y, x) in tetromino.GetTotalPositions())
         {
-            (int, int) center = tetromino.GetCenterPosition();
-            if (TileClashes((y + center.Item1, x + center.Item2)))
+            if (TileClashes((y, x)))
             {
                 return false;
             }
@@ -230,7 +262,6 @@ public class GameManager : MonoBehaviour
     public void StoreHighScore()
     {
         File.WriteAllText(highScoreFilePath, highScore.ToString());
-        Debug.Log("Stored score " + highScore);
     }
 
     private void HandleScoreAndStop()
@@ -241,8 +272,8 @@ public class GameManager : MonoBehaviour
         if (highScore < score)
         {
             highScore = score;
+            StoreHighScore();
         }
-        Debug.Log("restarting");
     }
 
     private void HandleScore(int rowsCleared)

@@ -14,13 +14,16 @@ public class Tetromino
     private HashSet<(int, int)> relativePositions;
     private (int, int) centerPosition;
 
+    private GameManager gameManager;
+
     private int colorIndex;
 
-    public Tetromino(System.Collections.Generic.HashSet<(int, int)> positions, int y, int x, int colorIndex)
+    public Tetromino(GameManager gm, System.Collections.Generic.HashSet<(int, int)> positions, int y, int x, int colorIndex)
     {
-        this.centerPosition = (y, x);
-        this.relativePositions = positions;
+        centerPosition = (y, x);
+        relativePositions = positions;
         this.colorIndex = colorIndex;
+        gameManager = gm;
     }
 
     public int GetColorIndex()
@@ -47,43 +50,52 @@ public class Tetromino
         return centerPosition;
     }
 
-    public bool MoveDown()
+    public HashSet<(int, int)> GetTotalPositions()
+    {
+        var totalPositions = new HashSet<(int, int)>();
+        foreach (var relativePosition in relativePositions)
+        {
+            totalPositions.Add((centerPosition.Item1 + relativePosition.Item1, centerPosition.Item2 + relativePosition.Item2));
+        }
+        return totalPositions;
+    }
+
+    public void MoveDown()
     {
         foreach (var (y, x) in relativePositions)
         {
-            if (GameManager.Instance.TileClashes((y + centerPosition.Item1 + 1, x + centerPosition.Item2)))
+            if (gameManager.TileClashes((y + centerPosition.Item1 + 1, x + centerPosition.Item2)))
             {
-                return false;
+                gameManager.CementTetromino();
+                return;
             }
         }
         centerPosition.Item1++;
-        return true;
     }
 
-    private bool MoveToSide(int offset)
+    private void MoveToSide(int offset)
     {
         foreach (var (y, x) in relativePositions)
         {
-            if (GameManager.Instance.TileClashes((y + centerPosition.Item1, x + centerPosition.Item2 + offset)))
+            if (gameManager.TileClashes((y + centerPosition.Item1, x + centerPosition.Item2 + offset)))
             {
-                return false;
+                return;
             }
         }
         centerPosition.Item2 += offset;
-        return true;
     }
 
-    public bool MoveRight()
+    public void MoveRight()
     {
-        return MoveToSide(1);
+        MoveToSide(1);
     }
 
-    public bool MoveLeft()
+    public void MoveLeft()
     {
-        return MoveToSide(-1);
+        MoveToSide(-1);
     }
 
-    public bool Rotate()
+    public void Rotate()
     {
         bool succeeded = false;
         HashSet<(int, int)> newPositions = new HashSet<(int, int)>();
@@ -95,10 +107,10 @@ public class Tetromino
             foreach (var (y, x) in relativePositions)
             {
                 newPositions.Add((x, -y));
-                if (GameManager.Instance.TileClashes((-x + centerPosition.Item1, y + centerPosition.Item2)))
+                if (gameManager.TileClashes((-x + centerPosition.Item1, y + centerPosition.Item2)))
                 {
                     succeeded = false;
-                    if (centerPosition.Item2 < GameManager.Instance.GridWidth / 2)
+                    if (centerPosition.Item2 < gameManager.GridWidth / 2)
                     {
                         centerPosition.Item2++;
                     }
@@ -112,6 +124,5 @@ public class Tetromino
         }
         
         relativePositions = newPositions;
-        return true;
     }
 }

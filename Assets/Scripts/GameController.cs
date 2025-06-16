@@ -72,7 +72,6 @@ public class GameController : MonoBehaviour
             dropTimer = 0f;
             gm.MoveTetrominoDown();
         }
-        gm.PrintSituation();
     }
 
     void HandleInput()
