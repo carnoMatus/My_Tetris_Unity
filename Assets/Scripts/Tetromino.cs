@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEditor.Rendering;
 using UnityEngine;
 
 
@@ -84,16 +85,32 @@ public class Tetromino
 
     public bool Rotate()
     {
-        var newPositions = new HashSet<(int, int)>();
-
-        foreach (var (y, x) in relativePositions)
+        bool succeeded = false;
+        HashSet<(int, int)> newPositions = new HashSet<(int, int)>();
+        while (!succeeded)
         {
-            newPositions.Add((x, -y));
-            if (GameManager.Instance.TileClashes((-x + centerPosition.Item1, y + centerPosition.Item2)))
+            succeeded = true;
+            newPositions.Clear();
+
+            foreach (var (y, x) in relativePositions)
             {
-                return false;
+                newPositions.Add((x, -y));
+                if (GameManager.Instance.TileClashes((-x + centerPosition.Item1, y + centerPosition.Item2)))
+                {
+                    succeeded = false;
+                    if (centerPosition.Item2 < GameManager.Instance.GridWidth / 2)
+                    {
+                        centerPosition.Item2++;
+                    }
+                    else
+                    {
+                        centerPosition.Item2--;
+                    }
+                    break;
+                }
             }
         }
+        
         relativePositions = newPositions;
         return true;
     }

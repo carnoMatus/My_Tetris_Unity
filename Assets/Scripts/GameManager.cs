@@ -4,9 +4,9 @@ using System.IO;
 
 public class GameManager : MonoBehaviour
 {
+
     public static GameManager Instance { get; private set; }
-    public static readonly int GridHeight = 20;
-    public static readonly int GridWidth = 10;
+    public bool FallDown { get; set; }
     private static readonly float Acceleration = 0.007f;
     private int score;
     private int highScore;
@@ -17,12 +17,13 @@ public class GameManager : MonoBehaviour
     private Tetromino tetromino;
     private Tetromino tetrominoNext;
 
+    [SerializeField] private int gridWidth, gridHeight;
     [SerializeField] private AudioSource clearRowAudio;
-    public bool FallDown { get; set; }
-    public GridManager GridManager { get; set; }
     [SerializeField] private float dropTime = 0.5f;
     [SerializeField] private TMP_Text scoreText;
     [SerializeField] private TMP_Text highScoreText;
+    [SerializeField] private SceneManager sceneManager;
+    [SerializeField] private GridManager gridManager;
     [SerializeField] private GameController gameController;
 
     private void Awake()
@@ -34,28 +35,33 @@ public class GameManager : MonoBehaviour
         }
 
         Instance = this;
+        gridManager.Initialize(this);
+        gameController.Initialize(this);
+
         highScoreFilePath = Path.Combine(Application.persistentDataPath, "highscore.txt");
+        grid = new int[gridHeight, gridWidth];
         DontDestroyOnLoad(gameObject);
     }
 
-    private GameManager()
-    {
-        grid = new int[GridHeight, GridWidth];
-    }
+    public SceneManager SceneManager => sceneManager;
+    public GridManager GridManager => gridManager;
+    public GameController GameController => gameController;
+    public int GridWidth => gridWidth;
+    public int GridHeight => gridHeight;
 
     public void PrintSituation()
     {
-        if (SceneManager.Instance.GameState != GameState.Playing)
+        if (sceneManager.GameState != GameState.Playing)
         {
             return;
         }
         Tile[,] tiles = GridManager.GetTiles();
-        for (int i = 0; i < GridHeight; i++)
+        for (int i = 0; i < gridHeight; i++)
         {
             for (int j = 0; j < GridWidth; j++)
             {
                 (int, int) relative = (i - tetromino.GetCenterPosition().Item1, j - tetromino.GetCenterPosition().Item2);
-                Tile currentTile = tiles[GridHeight - 1 - i, j];
+                Tile currentTile = tiles[gridHeight - 1 - i, j];
                 if (tetromino.GetPositions().Contains(relative))
                 {
                     currentTile.Render(tetromino.GetColor(), (i + j) % 2 == 0);
@@ -72,7 +78,7 @@ public class GameManager : MonoBehaviour
             }
         }
         highScoreText.text = "HIGH SCORE: " + highScore;
-        if (SceneManager.Instance.GameState != GameState.Restart)
+        if (sceneManager.GameState != GameState.Restart)
         {
             scoreText.text = "SCORE: " + score;
             return;
@@ -87,8 +93,8 @@ public class GameManager : MonoBehaviour
         {
             return false; // still above the screen
         }
-        return position.Item1 >= GridHeight ||
-            position.Item2 >= GridWidth ||
+        return position.Item1 >= gridHeight ||
+            position.Item2 >= gridWidth ||
             position.Item2 < 0 ||
             grid[position.Item1, position.Item2] != 0;
     }
@@ -96,7 +102,7 @@ public class GameManager : MonoBehaviour
     private void HandleFinishedRows()
     {
         int rowsCleared = 0;
-        for (int i = 0; i < GridHeight; i++)
+        for (int i = 0; i < gridHeight; i++)
         {
             bool full = true;
             for (int j = 0; j < GridWidth; j++)
@@ -113,12 +119,12 @@ public class GameManager : MonoBehaviour
                 rowsCleared++;
                 for (int row = i; row > 0; row--)
                 {
-                    for (int col = 0; col < GridWidth; col++)
+                    for (int col = 0; col < gridWidth; col++)
                     {
                         grid[row, col] = grid[row - 1, col];
                     }
                 }
-                for (int col = 0; col < GridWidth; col++)
+                for (int col = 0; col < gridWidth; col++)
                 {
                     grid[0, col] = 0;
                 }
@@ -147,7 +153,7 @@ public class GameManager : MonoBehaviour
         }
         HandleFinishedRows();
         tetromino = tetrominoNext;
-        tetrominoNext = TetrominoSpawner.GenerateTetromino();
+        tetrominoNext = TetrominoSpawner.GenerateTetromino(gridWidth);
         Debug.Log("NEXT TETROMINO: " + string.Join(", ", tetrominoNext.GetPositions()));
         if (!CheckSpawnIsOK())
         {
@@ -187,13 +193,13 @@ public class GameManager : MonoBehaviour
 
     public void StartNew()
     {
-        grid = new int[GridHeight, GridWidth];
+        grid = new int[gridHeight, gridWidth];
         score = 0;
         level = 0;
         totalRowsCleared = 0;
 
-        tetrominoNext = TetrominoSpawner.GenerateTetromino();
-        tetromino = TetrominoSpawner.GenerateTetromino();
+        tetrominoNext = TetrominoSpawner.GenerateTetromino(gridWidth);
+        tetromino = TetrominoSpawner.GenerateTetromino(gridWidth);
         FallDown = false;
     }
 
@@ -231,7 +237,7 @@ public class GameManager : MonoBehaviour
     {
         gameController.SetGameToNotPlaying("Press SPACE to restart...\n\nESC to quit", GameState.Restart);
         FallDown = false;
-        SceneManager.Instance.GameState = GameState.Restart;
+        sceneManager.GameState = GameState.Restart;
         if (highScore < score)
         {
             highScore = score;

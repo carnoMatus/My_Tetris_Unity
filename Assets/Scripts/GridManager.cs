@@ -2,14 +2,13 @@ using UnityEngine;
 
 public class GridManager : MonoBehaviour
 {
-    [SerializeField] private int width, height;
+    private int width, height;
     [SerializeField] private Tile tilePrefab;
     [SerializeField] private new Transform camera;
-    private Tile[,] tileGrid = new Tile[20, 10];
-
+    private Tile[,] tileGrid;
     void Start()
     {
-        GenerateGrid();
+        
     }
     
     public void GenerateGrid()
@@ -26,6 +25,14 @@ public class GridManager : MonoBehaviour
             }
         }
         camera.transform.position = new Vector3((float)width / 2 - 0.5f, (float)height / 2 - 0.5f, -10);
+    }
+
+    public void Initialize(GameManager gameManager)
+    {
+        width = gameManager.GridWidth;
+        height = gameManager.GridHeight;
+        tileGrid = new Tile[height, width];
+        GenerateGrid();
     }
 
     public Tile[,] GetTiles()

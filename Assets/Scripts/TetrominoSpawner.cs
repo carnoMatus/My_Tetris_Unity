@@ -20,9 +20,9 @@ public static class TetrominoSpawner
         templates.Add(new HashSet<(int, int)>() { (0,0), (0,-1), (1,1), (1,0) }); // Reverse-ZigZag
     }
 
-    public static Tetromino GenerateTetromino()
+    public static Tetromino GenerateTetromino(int gridWidth)
     {
         int choice = random.Next(templates.Count);
-        return new Tetromino(templates[choice], 0, 5, choice);
+        return new Tetromino(templates[choice], 0, gridWidth / 2, choice);
     }
 }

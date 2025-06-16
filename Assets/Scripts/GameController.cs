@@ -5,7 +5,6 @@ using TMPro;
 public class GameController : MonoBehaviour
 {
     [SerializeField] private TMP_Text messageText;
-    [SerializeField] private GridManager gridManager;
     [SerializeField] private AudioSource downKeyAudio;
     [SerializeField] private AudioSource soundtrack;
     [SerializeField] private AudioSource clickAudio;
@@ -19,9 +18,6 @@ public class GameController : MonoBehaviour
         soundtrack.loop = true;
         soundtrack?.Play();
         ApplyPauseAudioEffect(true);
-        gm = GameManager.Instance;
-        sm = SceneManager.Instance;
-        gm.GridManager = gridManager;
         gm.LoadHighScore();
     }
 
@@ -44,6 +40,12 @@ public class GameController : MonoBehaviour
             default:
                 break;
         }
+    }
+
+    public void Initialize(GameManager gameManager)
+    {
+        gm = gameManager;
+        sm = gameManager.SceneManager;
     }
 
     private void MenuUpdate()
