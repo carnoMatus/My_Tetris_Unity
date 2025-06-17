@@ -53,30 +53,30 @@ public class GameManager : MonoBehaviour
     public int GridWidth => gridWidth;
     public int GridHeight => gridHeight;
 
-    public void PrintSituation()
+    public void RefreshGameScreen()
     {
         if (sceneManager.GameState != GameState.Playing)
         {
             return;
         }
         Tile[,] tiles = GridManager.GetTiles();
-        for (int i = 0; i < gridHeight; i++)
+        for (int y = 0; y < gridHeight; y++)
         {
-            for (int j = 0; j < GridWidth; j++)
+            for (int x = 0; x < GridWidth; x++)
             {
-                (int, int) relative = (i - tetromino.GetCenterPosition().Item1, j - tetromino.GetCenterPosition().Item2);
-                Tile currentTile = tiles[gridHeight - 1 - i, j];
+                Vector2Int relative = new Vector2Int(x - tetromino.GetCenterPosition().x, y - tetromino.GetCenterPosition().y);
+                Tile currentTile = tiles[gridHeight - 1 - y, x];
                 if (tetromino.GetPositions().Contains(relative))
                 {
-                    currentTile.Render(tetromino.GetColor(), (i + j) % 2 == 0);
+                    currentTile.Render(tetromino.GetColor(), (y + x) % 2 == 0);
                 }
-                else if (grid[i, j] == 0)
+                else if (grid[y, x] == 0)
                 {
-                    currentTile.Render((i + j) % 2 == 0);
+                    currentTile.Render((y + x) % 2 == 0);
                 }
                 else
                 {
-                    currentTile.Render(Tetromino.GetColorByIndex(grid[i, j] - 1), (i + j) % 2 == 0);
+                    currentTile.Render(Tetromino.GetColorByIndex(grid[y, x] - 1), (y + x) % 2 == 0);
                     // again 0 cant be there
                 }
             }
@@ -92,50 +92,51 @@ public class GameManager : MonoBehaviour
 
     public void RefreshTetromino(Action move)
     {
-        HashSet<(int, int)> tetrominoBefore = tetromino.GetTotalPositions();
+        HashSet<Vector2Int> tetrominoBefore = tetromino.GetTotalPositions();
         move?.Invoke();
-        HashSet<(int, int)> tetrominoAfter = tetromino.GetTotalPositions();
+        HashSet<Vector2Int> tetrominoAfter = tetromino.GetTotalPositions();
         Tile[,] tiles = GridManager.GetTiles();
         tetrominoBefore.ExceptWith(tetrominoAfter);
 
         foreach (var position in tetrominoBefore)
         {
-            if (position.Item1 < 0)
+            if (position.y < 0)
             {
                 continue; // still above the screen
             }
-            Tile currentTile = tiles[gridHeight - 1 - position.Item1, position.Item2];
-            if (grid[position.Item1, position.Item2] == 0)
+            Tile currentTile = tiles[gridHeight - 1 - position.y, position.x];
+            if (grid[position.y, position.x] == 0)
             {
-                currentTile.Render((position.Item1 + position.Item2) % 2 == 0);
+                currentTile.Render((position.y + position.x) % 2 == 0);
             }
         }
         foreach (var position in tetrominoAfter)
         {
-            if (position.Item1 < 0)
+            if (position.y < 0)
             {
                 continue; // still above the screen
             }
-            Tile currentTile = tiles[gridHeight - 1 - position.Item1, position.Item2];
-            currentTile.Render(tetromino.GetColor(), (position.Item1 + position.Item2) % 2 == 0);
+            Tile currentTile = tiles[gridHeight - 1 - position.y, position.x];
+            currentTile.Render(tetromino.GetColor(), (position.y + position.x) % 2 == 0);
         }
     }
 
-    public bool TileClashes((int, int) position)
+    public bool TileClashes(Vector2Int position)
     {
-        if (position.Item1 < 0)
+        if (position.y < 0)
         {
             return false; // still above the screen
         }
-        return position.Item1 >= gridHeight ||
-            position.Item2 >= gridWidth ||
-            position.Item2 < 0 ||
-            grid[position.Item1, position.Item2] != 0;
+        return position.y >= gridHeight ||
+            position.x >= gridWidth ||
+            position.x < 0 ||
+            grid[position.y, position.x] != 0;
     }
 
     private void HandleFinishedRows()
     {
         int rowsCleared = 0;
+        EffectTile[,] effectTiles = gridManager.GetEffectTiles();
         for (int i = 0; i < gridHeight; i++)
         {
             bool full = true;
@@ -150,6 +151,10 @@ public class GameManager : MonoBehaviour
 
             if (full)
             {
+                for (int k = 0; k < gridWidth; k++)
+                {
+                    effectTiles[gridHeight - i - 1, k].StartFadeOut();
+                }
                 rowsCleared++;
                 for (int row = i; row > 0; row--)
                 {
@@ -175,15 +180,14 @@ public class GameManager : MonoBehaviour
 
     public void CementTetromino()
     {
-        PrintSituation();
-        foreach ((int, int) position in tetromino.GetPositions())
+        foreach (var position in tetromino.GetPositions())
         {
-            if (position.Item1 + tetromino.GetCenterPosition().Item1 < 0) // we are above the screen
+            if (position.y + tetromino.GetCenterPosition().y < 0) // we are above the screen
             {
                 HandleScoreAndStop();
                 return;
             }
-            grid[position.Item1 + tetromino.GetCenterPosition().Item1, position.Item2 + tetromino.GetCenterPosition().Item2]
+            grid[position.y + tetromino.GetCenterPosition().y, position.x + tetromino.GetCenterPosition().x]
                 = tetromino.GetColorIndex() + 1; // 1 because 0 is an color index but we don't want zeros
         }
         HandleFinishedRows();
@@ -195,7 +199,7 @@ public class GameManager : MonoBehaviour
             return;
         }
         FallDown = false;
-        PrintSituation();
+        RefreshGameScreen();
     }
 
     public float GetDropTime()
@@ -233,14 +237,14 @@ public class GameManager : MonoBehaviour
         tetrominoNext = TetrominoSpawner.GenerateTetromino(gridWidth);
         tetromino = TetrominoSpawner.GenerateTetromino(gridWidth);
         FallDown = false;
-        PrintSituation();
+        RefreshGameScreen();
     }
 
     private bool CheckSpawnIsOK()
     {
-        foreach (var (y, x) in tetromino.GetTotalPositions())
+        foreach (var position in tetromino.GetTotalPositions())
         {
-            if (TileClashes((y, x)))
+            if (TileClashes(position))
             {
                 return false;
             }
