@@ -26,9 +26,11 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float dropTime = 0.5f;
     [SerializeField] private TMP_Text scoreText;
     [SerializeField] private TMP_Text highScoreText;
+    [SerializeField] private TMP_Text nextText;
     [SerializeField] private SceneManager sceneManager;
     [SerializeField] private GridManager gridManager;
     [SerializeField] private GameController gameController;
+    [SerializeField] private NextTetrominoHint nextTetrominoHint;
 
     private void Awake()
     {
@@ -193,6 +195,7 @@ public class GameManager : MonoBehaviour
         HandleFinishedRows();
         tetromino = tetrominoNext;
         tetrominoNext = TetrominoSpawner.GenerateTetromino(gridWidth);
+        nextTetrominoHint.ChangeTexture(tetrominoNext.GetColorIndex());
         if (!CheckSpawnIsOK())
         {
             HandleScoreAndStop();
@@ -229,12 +232,15 @@ public class GameManager : MonoBehaviour
 
     public void StartNew()
     {
+        nextText.text = "NEXT:";
+        nextTetrominoHint.preview.enabled = true;
         grid = new int[gridHeight, gridWidth];
         score = 0;
         level = 0;
         totalRowsCleared = 0;
 
         tetrominoNext = TetrominoSpawner.GenerateTetromino(gridWidth);
+        nextTetrominoHint.ChangeTexture(tetrominoNext.GetColorIndex());
         tetromino = TetrominoSpawner.GenerateTetromino(gridWidth);
         FallDown = false;
         RefreshGameScreen();
