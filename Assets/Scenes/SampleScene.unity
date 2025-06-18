@@ -698,10 +698,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71568fc37cfa3e84d8894fb9aea42ab8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridWidth: 10
-  gridHeight: 20
+  gameSettings: {fileID: 11400000, guid: b83349818591b9a45818c156296448c8, type: 2}
   clearRowAudio: {fileID: 488912113}
-  dropTime: 0.5
   scoreText: {fileID: 538556879}
   highScoreText: {fileID: 771708196}
   nextText: {fileID: 87392841}

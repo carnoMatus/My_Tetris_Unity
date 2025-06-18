@@ -20,10 +20,11 @@ public class GameManager : MonoBehaviour
     private int[,] grid;
     private Tetromino tetromino;
     private Tetromino tetrominoNext;
+    private int gridWidth, gridHeight;
+    private float dropTime = 0.5f;
 
-    [SerializeField] private int gridWidth, gridHeight;
+    [SerializeField] private GameSettings gameSettings;
     [SerializeField] private AudioSource clearRowAudio;
-    [SerializeField] private float dropTime = 0.5f;
     [SerializeField] private TMP_Text scoreText;
     [SerializeField] private TMP_Text highScoreText;
     [SerializeField] private TMP_Text nextText;
@@ -39,6 +40,9 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+        gridWidth = gameSettings.gridWidth;
+        gridHeight = gameSettings.gridHeight;
+        dropTime = gameSettings.dropTime;
 
         Instance = this;
         gridManager.Initialize(this);
