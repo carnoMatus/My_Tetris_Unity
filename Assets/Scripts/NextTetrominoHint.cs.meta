@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: b1725a3404a05014484e346246c7c0b3
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - preview: {instanceID: 0}
+  - TShaped: {fileID: 4567580520168220366, guid: f9b7fb7ba5012224dbfe2a764ed0a287, type: 3}
+  - Straight: {fileID: -5512458133631365161, guid: f060089e42e13b746b6cd57e39368685, type: 3}
+  - Box: {fileID: 7499154508442906066, guid: c90f88f7a75d9b64c90c1b406853ac35, type: 3}
+  - LShaped: {instanceID: 0}
+  - ReverseL: {instanceID: 0}
+  - Zigzag: {instanceID: 0}
+  - ReverseZigzag: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
