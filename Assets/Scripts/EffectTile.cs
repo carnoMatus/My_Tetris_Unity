@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Threading.Tasks;
 
 public class EffectTile : MonoBehaviour
 {
@@ -10,7 +9,7 @@ public class EffectTile : MonoBehaviour
         StartCoroutine(FadeOut());
     }
 
-    private System.Collections.IEnumerator FadeOut()  //ChatGPT generated this code, I just had  the idea
+    private System.Collections.IEnumerator FadeOut()  //ChatGPT generated this code, I just had the idea
     {
         renderer.enabled = true;
         Color c = renderer.color;

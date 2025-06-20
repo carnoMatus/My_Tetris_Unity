@@ -49,4 +49,20 @@ public class GridManager : MonoBehaviour
     {
         return effectGrid;
     }
+
+    public void Clear()
+    {
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                if (tileGrid[y, x] != null)
+                {
+                    GameObject.Destroy(tileGrid[y, x].gameObject);
+                    tileGrid[y, x] = null;
+                }
+                
+            }
+        }
+    }
 }

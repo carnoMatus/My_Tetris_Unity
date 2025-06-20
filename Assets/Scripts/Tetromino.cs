@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEditor.Rendering;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -97,9 +92,9 @@ public class Tetromino
 
     public void Rotate()
     {
-        bool succeeded = false;
+        bool succeeded;
         HashSet<Vector2Int> newPositions = new HashSet<Vector2Int>();
-        while (!succeeded)
+        for (int i = 0; i < 2; i++)
         {
             succeeded = true;
             newPositions.Clear();
@@ -122,8 +117,11 @@ public class Tetromino
                     break;
                 }
             }
+            if (succeeded)
+            {
+                break;
+            }
         }
-        
         relativePositions = newPositions;
     }
 }

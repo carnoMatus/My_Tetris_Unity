@@ -11,7 +11,7 @@ public class GameManager : MonoBehaviour
 
     public static GameManager Instance { get; private set; }
     public bool FallDown { get; set; }
-    private static readonly float Acceleration = 0.007f;
+    private static readonly float Acceleration = 0.1f;
     private int score;
     private int highScore;
     private int level;
@@ -21,13 +21,9 @@ public class GameManager : MonoBehaviour
     private Tetromino tetromino;
     private Tetromino tetrominoNext;
     private int gridWidth, gridHeight;
-    private float dropTime = 0.5f;
-
-    private GameSettings gameSettings;
-    [SerializeField] private GameSettings tinyLevel;
-    [SerializeField] private GameSettings classicLevel;
-    [SerializeField] private GameSettings bigLevel;
-
+    private float startingDropTime;
+    private float currentDropTime;
+    [SerializeField] private GameSettings gameSettings;
     [SerializeField] private AudioSource clearRowAudio;
     [SerializeField] private TMP_Text scoreText;
     [SerializeField] private TMP_Text highScoreText;
@@ -44,11 +40,10 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-        gameSettings = classicLevel;
 
         gridWidth = gameSettings.gridWidth;
         gridHeight = gameSettings.gridHeight;
-        dropTime = gameSettings.dropTime;
+        startingDropTime = gameSettings.dropTime;
 
         Instance = this;
         gridManager.Initialize(this);
@@ -189,7 +184,7 @@ public class GameManager : MonoBehaviour
         {
             clearRowAudio?.Play();
         }
-        dropTime = 0.8f - Acceleration * level;
+        currentDropTime = startingDropTime - Acceleration * level;
     }
 
     public void CementTetromino()
@@ -219,7 +214,7 @@ public class GameManager : MonoBehaviour
 
     public float GetDropTime()
     {
-        return dropTime;
+        return currentDropTime;
     }
 
     public void MoveTetrominoDown()
@@ -244,17 +239,19 @@ public class GameManager : MonoBehaviour
 
     public void StartNew()
     {
+        FallDown = false;
         nextText.text = "NEXT:";
         nextTetrominoHint.preview.enabled = true;
         grid = new int[gridHeight, gridWidth];
         score = 0;
         level = 0;
         totalRowsCleared = 0;
+        currentDropTime = startingDropTime;
 
         tetrominoNext = TetrominoSpawner.GenerateTetromino(gridWidth);
         nextTetrominoHint.ChangeTexture(tetrominoNext.GetColorIndex());
         tetromino = TetrominoSpawner.GenerateTetromino(gridWidth);
-        FallDown = false;
+
         RefreshGameScreen();
     }
 
@@ -321,5 +318,27 @@ public class GameManager : MonoBehaviour
         score += gain;
         totalRowsCleared += rowsCleared;
         level = totalRowsCleared / 10;
+    }
+
+    public void SetSize(GameSettings gameSettings)
+    {
+        this.gameSettings = gameSettings;
+        gridWidth = gameSettings.gridWidth;
+        gridHeight = gameSettings.gridHeight;
+        startingDropTime = gameSettings.dropTime;
+        currentDropTime = gameSettings.dropTime;
+
+        grid = new int[gridHeight, gridWidth];
+
+        gridManager.Clear();
+        gridManager.Initialize(this);
+    }
+
+    public void HideUIElements()
+    {
+        scoreText.text = "";
+        highScoreText.text = "";
+        nextText.text = "";
+        nextTetrominoHint.preview.enabled = false;
     }
 }

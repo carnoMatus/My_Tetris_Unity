@@ -6,13 +6,13 @@ public class NextTetrominoHint : MonoBehaviour
 {
     public Image preview;
 
-    public Sprite TShaped;
-    public Sprite Straight;
-    public Sprite Box;
-    public Sprite LShaped;
-    public Sprite ReverseL;
-    public Sprite Zigzag;
-    public Sprite ReverseZigzag;
+    [SerializeField] private Sprite TShaped;
+    [SerializeField] private Sprite Straight;
+    [SerializeField] private Sprite Box;
+    [SerializeField] private Sprite LShaped;
+    [SerializeField] private Sprite ReverseL;
+    [SerializeField] private Sprite Zigzag;
+    [SerializeField] private Sprite ReverseZigzag;
 
     private Sprite[] sprites;
     

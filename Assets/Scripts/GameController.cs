@@ -8,12 +8,6 @@ public class GameController : MonoBehaviour
     private GameManager gm;
     private SceneManager sm;
     private float dropTimer;
-
-    void Start()
-    {
-
-    }
-
     void Update()
     {
         if (sm.GameState == GameState.Playing)
