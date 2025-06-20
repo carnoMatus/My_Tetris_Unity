@@ -23,7 +23,11 @@ public class GameManager : MonoBehaviour
     private int gridWidth, gridHeight;
     private float dropTime = 0.5f;
 
-    [SerializeField] private GameSettings gameSettings;
+    private GameSettings gameSettings;
+    [SerializeField] private GameSettings tinyLevel;
+    [SerializeField] private GameSettings classicLevel;
+    [SerializeField] private GameSettings bigLevel;
+
     [SerializeField] private AudioSource clearRowAudio;
     [SerializeField] private TMP_Text scoreText;
     [SerializeField] private TMP_Text highScoreText;
@@ -40,6 +44,8 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+        gameSettings = classicLevel;
+
         gridWidth = gameSettings.gridWidth;
         gridHeight = gameSettings.gridHeight;
         dropTime = gameSettings.dropTime;
@@ -47,8 +53,10 @@ public class GameManager : MonoBehaviour
         Instance = this;
         gridManager.Initialize(this);
         gameController.Initialize(this);
+        sceneManager.Initialize(this);
 
         highScoreFilePath = Path.Combine(Application.persistentDataPath, "highscore.txt");
+        LoadHighScore();
         grid = new int[gridHeight, gridWidth];
         DontDestroyOnLoad(gameObject);
     }
@@ -280,9 +288,8 @@ public class GameManager : MonoBehaviour
 
     private void HandleScoreAndStop()
     {
-        gameController.SetGameToNotPlaying("Press SPACE to restart...\n\nESC to quit", GameState.Restart);
         FallDown = false;
-        sceneManager.GameState = GameState.Restart;
+        sceneManager.GameEnded();
         if (highScore < score)
         {
             highScore = score;

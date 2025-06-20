@@ -10,8 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 57a3bed60e172bc4dbc8dde96c4bcaf7, type: 3}
-  m_Name: GameSettings
+  m_Name: TinyLevel
   m_EditorClassIdentifier: 
-  gridWidth: 10
+  gridWidth: 7
   gridHeight: 20
   dropTime: 0.5
