@@ -11,7 +11,7 @@ public class GameManager : MonoBehaviour
 
     public static GameManager Instance { get; private set; }
     public bool FallDown { get; set; }
-    private static readonly float Acceleration = 0.1f;
+    private static readonly float Acceleration = 0.03f;
     private int score;
     private int highScore;
     private int level;

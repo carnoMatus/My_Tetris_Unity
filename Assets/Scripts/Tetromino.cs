@@ -92,9 +92,10 @@ public class Tetromino
 
     public void Rotate()
     {
-        bool succeeded;
+        bool succeeded = true;
+        int offset = 0;
         HashSet<Vector2Int> newPositions = new HashSet<Vector2Int>();
-        for (int i = 0; i < 2; i++)
+        for (int i = 0; i < 3; i++)
         {
             succeeded = true;
             newPositions.Clear();
@@ -103,18 +104,23 @@ public class Tetromino
             {
                 Vector2Int newPosition = new Vector2Int(-position.y, position.x);
                 newPositions.Add(newPosition);
-                if (gameManager.TileClashes(newPosition + centerPosition))
+                if ((newPosition + centerPosition).x < 0)
                 {
                     succeeded = false;
-                    if (centerPosition.x < gameManager.GridWidth / 2)
-                    {
-                        centerPosition.x++;
-                    }
-                    else
-                    {
-                        centerPosition.x--;
-                    }
+                    centerPosition.x++;
+                    offset++;
                     break;
+                }
+                else if ((newPosition + centerPosition).x >= gameManager.GridWidth)
+                {
+                    succeeded = false;
+                    centerPosition.x--;
+                    offset--;
+                    break;
+                }
+                else if (gameManager.TileClashes(newPosition + centerPosition))
+                {
+                    succeeded = false;
                 }
             }
             if (succeeded)
@@ -122,6 +128,11 @@ public class Tetromino
                 break;
             }
         }
-        relativePositions = newPositions;
+        if (succeeded) {
+            relativePositions = newPositions;
+        } else
+        {
+            centerPosition.x -= offset;
+        }
     }
 }
